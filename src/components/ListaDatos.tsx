@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
-import { Button, Card, Accordion, AccordionSummary, AccordionDetails, Typography, Collapse} from "@mui/material";
+import { Button, Card} from "@mui/material";
 import { Html5QrcodeScanner } from "html5-qrcode";
-import { QRCodeCanvas } from "qrcode.react";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 interface Attendance {
   parentName: string;
@@ -41,20 +39,9 @@ const padres = [
   { id: 2, nombre: "Luisa Torres", kids: ["María Torres"], qr: "par-2", encargados: []},
 ];
 
-const encargados = [
-  { id: 1, nombre: "Tia maria"}
-];
-
-const attendanceList: Attendance[] = [
-];
-
-const attendanceListVolunteers: AttendanceVolunteers[] = [
-];
-
 
 export default function AttendanceCheck() {
     const [scannedParent, setScannedParent] = useState<number | null>(null);
-    const [attendanceList, setAttendanceList] = useState<Attendance[]>([]);
     const [attendanceListVolunteers, setAttendanceListVolunteers] = useState<AttendanceVolunteers[]>([]);
     const [isScanning, setIsScanning] = useState(false);
     const [lastScanned, setLastScanned] = useState<string | null>(null);
@@ -145,10 +132,6 @@ export default function AttendanceCheck() {
           const currentTime = new Date().toLocaleString();
           // Marcar la entrada del niño
           child.entryTime = currentTime;
-          setAttendanceList((prevList) => [
-            ...prevList,
-            { parentName: parent.nombre, childName: child.nombre, group: child.grupo, entryTime: currentTime },
-          ]);
           setMessage(`Entrada registrada para ${child.nombre} con ${parent.nombre}`);
           setSelectedChild(null); // Limpiar selección después de registrar
         }
@@ -184,10 +167,6 @@ export default function AttendanceCheck() {
           const currentTime = new Date().toLocaleString();
           // Marcar la salida del niño
           child.exitTime = currentTime;
-          setAttendanceList((prevList) => [
-            ...prevList,
-            { parentName: parent.nombre, childName: child.nombre, group: child.grupo, entryTime: child.entryTime, exitTime: currentTime },
-          ]);
           setMessage(`Salida registrada para ${child.nombre} con ${parent.nombre}`);
           setSelectedChild(null); // Limpiar selección después de registrar
         }
