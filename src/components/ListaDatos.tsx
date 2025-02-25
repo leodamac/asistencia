@@ -22,7 +22,7 @@ const voluntarios = [
   { id: 1, nombre: "Juan Pérez", grupo: "Grupo 1", qr: "vol-1" , entryTime: "", exitTime: ""},
   { id: 2, nombre: "Ana Gómez", grupo: "Grupo 2", qr: "vol-2" , entryTime: "", exitTime: ""},
   { id: 3, nombre: "Cristiano Messi", grupo: "Futbol", qr: "vol-3" , entryTime: "", exitTime: ""},
-];
+]; // Comentado temporalmente
 
 const profesores = [
   { id: 1, nombre: "Profesor 1", rol: "coordinador", qr: "pro-1" },
