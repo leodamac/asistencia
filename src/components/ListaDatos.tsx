@@ -39,6 +39,62 @@ const padres = [
   { id: 2, nombre: "Luisa Torres", kids: ["María Torres"], qr: "par-2", encargados: []},
 ];
 
+const renderVoluntarios = () => (
+  <div>
+    <h3>Voluntarios</h3>
+    {voluntarios.map((voluntario) => (
+      <div key={voluntario.id}>
+        <strong>Nombre:</strong> {voluntario.nombre} <br />
+        <strong>Grupo:</strong> {voluntario.grupo} <br />
+        <strong>QR:</strong> {voluntario.qr} <br />
+        <hr />
+      </div>
+    ))}
+  </div>
+);
+
+const renderProfesores = () => (
+  <div>
+    <h3>Profesores</h3>
+    {profesores.map((profesor) => (
+      <div key={profesor.id}>
+        <strong>Nombre:</strong> {profesor.nombre} <br />
+        <strong>Rol:</strong> {profesor.rol} <br />
+        <strong>QR:</strong> {profesor.qr} <br />
+        <hr />
+      </div>
+    ))}
+  </div>
+);
+
+const renderNiños = () => (
+  <div>
+    <h3>Niños</h3>
+    {kids.map((kid) => (
+      <div key={kid.id}>
+        <strong>Nombre:</strong> {kid.nombre} <br />
+        <strong>Grupo:</strong> {kid.grupo} <br />
+        <strong>QR:</strong> {kid.qr} <br />
+        <hr />
+      </div>
+    ))}
+  </div>
+);
+
+const renderPadres = () => (
+  <div>
+    <h3>Padres</h3>
+    {padres.map((padre) => (
+      <div key={padre.id}>
+        <strong>Nombre:</strong> {padre.nombre} <br />
+        <strong>Niños a cargo:</strong> {padre.kids.join(", ")} <br />
+        <strong>Encargados:</strong> {padre.encargados.join(", ")} <br />
+        <strong>QR:</strong> {padre.qr} <br />
+        <hr />
+      </div>
+    ))}
+  </div>
+);
 
 export default function AttendanceCheck() {
     const [scannedParent, setScannedParent] = useState<number | null>(null);
@@ -244,6 +300,8 @@ export default function AttendanceCheck() {
     const groupedAttendanceVolunteers = groupByGroupVolunteers();
 
   return (
+
+
     <div className="p-6 max-w-lg mx-auto">
       <h1 className="text-2xl font-bold mb-4">Marcar Asistencia</h1>
       <Card className="p-4">
@@ -418,6 +476,16 @@ export default function AttendanceCheck() {
           {scannedVolunteer ? "Profesor" : "Voluntario"} no escaneado aún.
         </div>
       )}
+
+      <div>
+      <h1>Lista de Personas</h1>
+      <div>
+        {renderVoluntarios()}
+        {renderProfesores()}
+        {renderNiños()}
+        {renderPadres()}
+      </div>
+      </div>
     </div>
   );
 }
