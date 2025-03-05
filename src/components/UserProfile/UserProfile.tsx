@@ -3,7 +3,7 @@ import { db, auth } from '../Firebase/Firebase';
 import { collection, query, where, getDocs, doc, setDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, Typography, Button, Modal, Box, CircularProgress } from '@mui/material';
+import { Card, CardContent, Typography, Button, Box } from '@mui/material';
 import './UserProfile.css';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import {QRCodeCanvas} from 'qrcode.react';
