@@ -19,16 +19,6 @@ const Login = () => {
       });
     });
 
-
-    useEffect(() => {
-      setTimeout(() => {
-        const passwordInput = document.getElementById('password') as HTMLInputElement; // Hacemos una afirmación del tipo
-        if (passwordInput) {
-          passwordInput.type = 'password'; // Ahora podemos acceder al 'type' sin error
-        }
-      }, 100); // Retraso para permitir que el autocompletado termine
-    }, []);
-
     const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault(); 
       try {

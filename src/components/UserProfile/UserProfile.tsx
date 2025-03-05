@@ -40,7 +40,7 @@ const UserProfile = () => {
         const [isProcessing, setIsProcessing] = useState(false);
         const [lastScanned, setLastScanned] = useState<string | null>(null);
 
-        const [openMessageModal, setOpenMessageModal] = useState(false);   // Modal para mostrar mensaje de éxito/error
+        const [openMessageModal, setOpenMessageModal] = useState(false);
 
         const [entradaHora, setEntradaHora] = useState<Timestamp | null>(null);
         const [salidaHora, setSalidaHora] = useState<Timestamp | null>(null);
@@ -77,8 +77,8 @@ const UserProfile = () => {
 
         const formatTimestamp = (timestamp: Timestamp) => {
             if (timestamp) {
-              const date = timestamp.toDate(); // Convierte el Timestamp en un objeto Date
-              return date.toLocaleString(); // Formatea la fecha como string
+              const date = timestamp.toDate();
+              return date.toLocaleString();
             }
             return null;
           };
@@ -233,23 +233,22 @@ const UserProfile = () => {
                 const qrCode = "vol-" + persona?.qr + "-" + vacacionalSeleccionado;
                 const horaActual = new Date().toLocaleTimeString();
         
-                setIsProcessing(true); // Comienza el proceso
+                setIsProcessing(true);
                 setModalTitle("Registrando Entrada");
                 setModalMessage(`Registrando entrada para ${persona?.nombre}. Hora de entrada: ${horaActual}`);
-        
-                // Abre el modal de mensaje (mensaje de proceso)
+
                 setOpenMessageModal(true);
-        
-                // Llamada a la función de registro
-                registrarAsistenciaEntrada(
+
+                registrarAsistencia(
                     vacacionalSeleccionado,
                     qrCode,
                     lastScanned?.split("|")[0],
                     Timestamp.now(),
+                    'entrada',
                     ""
                 )
                 .then(() => {
-                    setIsProcessing(false); // Finaliza el proceso
+                    setIsProcessing(false);
                     setModalTitle("Entrada Registrada");
                     setModalMessage(`La entrada para ${persona?.nombre} ha sido registrada con éxito a las ${horaActual}.`);
                 })
@@ -259,44 +258,12 @@ const UserProfile = () => {
                     setModalMessage("Hubo un error al registrar la entrada. Por favor, inténtalo nuevamente. " + error);
                 })
                 .finally(() => {
-                    setOpenMessageModal(false); // Cierra el modal después de procesar
+                    setOpenMessageModal(false);
                     cerrarModal();
                     abrirModal(modalTitle, `La entrada para ${persona?.nombre} ha sido registrada con éxito a las ${horaActual}.`);
                 });
             }
         }
-
-        async function registrarAsistenciaEntrada(vacacionalId: string, voluntarioId: string, quienPermiteId: string, horaEntrada: Timestamp, observaciones: string) {
-            const fecha = new Date().toISOString().split('T')[0];
-            const asistenciaId = `${vacacionalId}-${voluntarioId}|${fecha}`;
-
-            const q =  query(collection(db, 'asistencias-voluntarios'), where('id_voluntario', '==', voluntarioId));
-            const querySnapshot = await getDocs(q);    
-
-            if (!querySnapshot.empty) {
-                querySnapshot.forEach(asistencia => {
-                    const {hora_marca_entrada } = asistencia.data();
-                    if (hora_marca_entrada) {
-                        return { success: false, message: 'La hora de entrada ya está registrada.' };
-                    }
-                });
-            }
-        
-            const docRef =  doc(collection(db,'asistencias-voluntarios'), asistenciaId);
-            const newAsistencia = {
-                vacacionalId: vacacionalId,
-                voluntarioId: voluntarioId,
-                quien_permite_id_entrada: quienPermiteId,
-                hora_real_entrada: Timestamp.now(),
-                hora_marca_entrada: horaEntrada,
-                observaciones_entrada: observaciones,
-            };
-
-            await setDoc(docRef, {
-                            ...newAsistencia
-                        }, { merge: true });
-            return { success: true, message: 'Asistencia registrada correctamente.' };
-        };
 
         useEffect(() => {
             let scanner: Html5QrcodeScanner | null = null;
@@ -328,9 +295,9 @@ const UserProfile = () => {
             const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
             if (canvas) {
               const link = document.createElement('a');
-              link.href = canvas.toDataURL('image/png'); // Obtiene la imagen del canvas en formato PNG
-              link.download = 'codigo-qr.png'; // Nombre del archivo de descarga
-              link.click(); // Inicia la descarga
+              link.href = canvas.toDataURL('image/png');
+              link.download = 'codigo-qr.png';
+              link.click();
             }
           };
 
@@ -422,26 +389,23 @@ const UserProfile = () => {
         };
 
         function registrarAsistenciaSalidaAuto(){
-            if(lastScanned){
-                }
-
             if (lastScanned) {
                 const horaActual = new Date().toLocaleTimeString();
         
-                setIsProcessing(true); // Comienza el proceso
+                setIsProcessing(true);
                 setModalTitle("Registrando Salida");
                 setModalMessage(`Registrando salida para ${persona?.nombre}. Hora de salida: ${horaActual}`);
         
-                // Abre el modal de mensaje (mensaje de proceso)
                 setOpenMessageModal(true);
-        
-                // Llamada a la función de registro
-                registrarAsistenciaSalida(vacacionalSeleccionado,
+
+                registrarAsistencia(vacacionalSeleccionado,
                     "vol-"+persona?.qr+"-"+vacacionalSeleccionado,
-                    lastScanned?.split("|")[0], Timestamp.now(),
+                    lastScanned?.split("|")[0],
+                    Timestamp.now(),
+                    'salida',
                     "")          
                 .then(() => {
-                    setIsProcessing(false); // Finaliza el proceso
+                    setIsProcessing(false);
                     setModalTitle("Registro Salida");
                     setModalMessage(`La salida para ${persona?.nombre} ha sido registrada con éxito a las ${horaActual}.`);
                 })
@@ -458,38 +422,38 @@ const UserProfile = () => {
             }
         };
 
-        async function registrarAsistenciaSalida(vacacionalId: string, voluntarioId: string, quienPermiteId: string, horaSalida: Timestamp, observaciones: string) {
-            const fecha = new Date().toISOString().split('T')[0]; // Fecha en formato YYYY-MM-DD
+
+        const registrarAsistencia = async (vacacionalId: string, voluntarioId: string, quienPermiteId: string, hora: Timestamp, tipo: 'entrada' | 'salida', observaciones: string) => {
+            const fecha = new Date().toISOString().split('T')[0];
             const asistenciaId = `${vacacionalId}-${voluntarioId}|${fecha}`;
-
-            const q =  query(collection(db, 'asistencias-voluntarios'), where('id_voluntario', '==', voluntarioId));
-            const querySnapshot = await getDocs(q);    
-
+        
+            const q = query(collection(db, 'asistencias-voluntarios'), where('id_voluntario', '==', voluntarioId));
+            const querySnapshot = await getDocs(q);
+        
             if (!querySnapshot.empty) {
                 querySnapshot.forEach(asistencia => {
-                    const {hora_marca_salida, hora_marca_entrada } = asistencia.data(); // Accede a los datos del documento
-                    if (hora_marca_salida) {
-                        return { success: false, message: 'La hora de salida ya está registrada.' };
+                    const { hora_marca_entrada, hora_marca_salida } = asistencia.data();
+        
+                    if (tipo === 'entrada' && hora_marca_entrada) {
+                        throw new Error('La hora de entrada ya está registrada.');
                     }
-
-                    if (horaSalida && !hora_marca_entrada) {
-                        console.log('No se puede marcar la salida si no se ha registrado la entrada.');
-                        return { success: false, message: 'No se puede marcar la salida si no se ha registrado la entrada.' };
+        
+                    if (tipo === 'salida' && !hora_marca_entrada) {
+                        throw new Error('No se puede marcar la salida si no se ha registrado la entrada.');
+                    }
+        
+                    if (tipo === 'salida' && hora_marca_salida) {
+                        throw new Error('La hora de salida ya está registrada.');
                     }
                 });
             }
         
-            const docRef =  doc(collection(db,'asistencias-voluntarios'), asistenciaId);
-            const newAsistencia = {
-                hora_real_salida: Timestamp.now(),
-                quien_permite_id_salida: quienPermiteId,
-                hora_marca_salida: horaSalida,
-                observaciones_salida: observaciones,
-            };
-
-            await setDoc(docRef, {
-                            ...newAsistencia
-                        }, { merge: true });
+            const docRef = doc(collection(db, 'asistencias-voluntarios'), asistenciaId);
+            const newAsistencia = tipo === 'entrada'
+                ? { hora_real_entrada: Timestamp.now(), hora_marca_entrada: hora, observaciones_entrada: observaciones, quien_permite_id_entrada: quienPermiteId }
+                : { hora_real_salida: Timestamp.now(), hora_marca_salida: hora, observaciones_salida: observaciones, quien_permite_id_salida: quienPermiteId };
+        
+            await setDoc(docRef, newAsistencia, { merge: true });
             return { success: true, message: 'Asistencia registrada correctamente.' };
         };
         
