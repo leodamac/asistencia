@@ -3,7 +3,7 @@ import { db, auth } from '../Firebase/Firebase';
 import { collection, query, where, getDocs, doc, setDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, Typography, Button, Modal, Box, CircularProgress } from '@mui/material';
+import { Card, CardContent, Typography, Button, Modal, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import './UserProfile.css';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import {QRCodeCanvas} from 'qrcode.react';
@@ -459,25 +459,16 @@ const UserProfile = () => {
         
         return (
         <div className="user-profile">
-            {/* Modal de mensaje (proceso o resultado) */}
-            <Modal open={openMessageModal} onClose={() => setOpenMessageModal(false)}>
-                <Box sx={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            width: 400,
-                            bgcolor: 'black',
-                            boxShadow: 24,
-                            p: 4,
-                            borderRadius: 2,
-                        }}>
-                    <Typography variant="h6">{modalTitle}</Typography>
+                <Dialog open={openMessageModal} onClose={() => setOpenMessageModal(false)}>
+                <DialogTitle>{modalTitle}</DialogTitle>
+                <DialogContent>
                     <Typography variant="body1">{modalMessage}</Typography>
                     {isProcessing && <CircularProgress />}
+                </DialogContent>
+                <DialogActions>
                     <Button onClick={() => setOpenMessageModal(false)} variant="outlined">Cerrar</Button>
-                </Box>
-            </Modal>
+                </DialogActions>
+                </Dialog>
 
         
                 <Modal
@@ -501,8 +492,6 @@ const UserProfile = () => {
                         <Typography variant="h6">{modalTitle}</Typography>
                         <Typography>{modalMessage}</Typography>
                         {realizarAcciones()}
-                        
-                        
                         <Button onClick={cerrarModal} variant="contained" sx={{ mt: 2 }}>Cerrar</Button>
                     </Box>
                 </Modal>
