@@ -1,0 +1,83 @@
+.hora-entry.Mui-disabled {
+    background-color: transparent !important; /* Evita el fondo predeterminado */
+    color: green !important;
+    border-color: green !important;
+  }
+  
+  .hora-exit.Mui-disabled {
+    background-color: transparent !important; /* Evita el fondo predeterminado */
+    color: red !important;
+    border-color: red !important;
+}
+
+.user-profile {
+    font-family: Arial, sans-serif;
+    align-items: center;
+    justify-content: space-around;
+}
+
+.profile-data {
+    display: flex; /* Para alinear los elementos horizontalmente */
+    align-items: center; /* Alinea verticalmente los elementos en el centro */
+    justify-content: space-around; /* Distribuye el espacio entre el texto y la imagen */
+    width: 100%; /* Asegura que el contenedor tenga el 100% del ancho *//* Alinea verticalmente los elementos en el centro */
+}
+
+.profile-info {
+    text-align: center; /* El contenedor de texto ocupa el espacio disponible */
+}
+
+.profile-photo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.profile-photo {
+    width: 80px; /* Tamaño de la imagen */
+    height: 80px; /* Tamaño de la imagen */
+    object-fit: cover; /* Asegura que la imagen no se distorsione */
+    border-radius: 50%; /* Hace que la imagen sea redonda */
+}
+
+.cards-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* Centra las tarjetas horizontalmente */
+    gap: 16px; /* Ajusta el espacio entre las tarjetas */
+}
+
+.card-container {
+    display: flex;
+    justify-content: center; /* Centra la tarjeta en su contenedor */
+}
+
+
+.profile-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.profile-actions button {
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.profile-actions button:hover {
+    background-color: #0056b3;
+}
+
+.profile-actions button:nth-child(2) {
+    background-color: #dc3545;
+}
+
+.profile-actions button:nth-child(2):hover {
+    background-color: #c82333;
+}

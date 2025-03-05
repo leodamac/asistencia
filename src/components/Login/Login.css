@@ -1,0 +1,60 @@
+/* Formulario */
+.formulario-login {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Espacio entre los campos */
+    width: 100%;
+    margin: 5 auto; /* Centrar el formulario */
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 5px;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Inputs */
+.formulario-login input {
+    padding: 8px;
+    border: 1px solid #242424;
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 16px;
+    width: 100%;
+}
+
+/* Botón */
+.formulario-login button {
+    padding: 8px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 16px;
+}
+
+.formulario-login button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Estilo para los placeholders */
+
+.formulario-login input::placeholder {
+    color: #e1e1e1;
+}
+
+/* Hover y focus */
+.formulario-login input:focus {
+    border-color: #007bff;
+}
+
+.formulario-login button:hover {
+    background-color: #0056b3;
+}
+
+/* Estilo de error o validación */
+.formulario-login input:invalid {
+    border-color: #e74c3c;
+}

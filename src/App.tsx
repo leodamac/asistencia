@@ -1,13 +1,27 @@
 import './App.css'
-import ListaDatos from "./components/ListaDatos";
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Login from "./components/Login/Login";
+import UserProfile from './components/UserProfile/UserProfile';
+import CrearUsuarios from './components/CrearUsuarios/crearUsuarios';
+import CargarRoles from './components/CargarRoles/CargarRoles';
+import AsignarVoluntarios from './components/AsignarVoluntarios/AsignarVoluntarios';
+import AsignarDelegados from './components/AsignarDelegados/AsignarDelegados';
 
 function App() {
   return (
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-4">Gestión de Asistencia</h1>
-        <ListaDatos/>
-      </div>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/login" element={<Login/>} />
+        <Route path="/user-profile" element={<UserProfile/>} />
+        <Route path="/crearUsuarios" element={<CrearUsuarios/>} />
+        <Route path="/cargarRoles" element={<CargarRoles/>} />
+        <Route path="/asignarVoluntarios" element={<AsignarVoluntarios/>}/>
+        <Route path="/asignarDelegados" element={<AsignarDelegados/>}/>
+        
+        <Route path="*" element={<Login/>} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App
