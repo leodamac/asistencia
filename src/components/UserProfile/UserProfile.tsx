@@ -49,6 +49,11 @@ const UserProfile = () => {
 
         const [isLoading, setIsLoading] = useState(false);
 
+        const [isVisible, setIsVisible] = useState(false);
+
+        const toggleVisibility = () => setIsVisible(!isVisible);
+
+
         const abrirModal = (titulo: string, mensaje: string) => {
             setModalTitle(titulo);
             setModalMessage(mensaje);
@@ -71,7 +76,6 @@ const UserProfile = () => {
         var vacacionalSeleccionado: string = "2025-1";
 
         const buscarDatoPorQR = async (qrCompleto: string, coleccion: string) => {
-            console.log(qrCompleto)
             return (await getDoc(doc(db, coleccion, qrCompleto))).data() || null;;
         };
 
@@ -302,90 +306,67 @@ const UserProfile = () => {
           };
 
         const realizarAcciones = () => {
-            switch (accionUsuario) {
-                case 'Gestionar Asistencia':
+            const realizarAcciones = () => {
+                switch (accionUsuario) {
+                  case 'Gestionar Asistencia':
                     const fecha = new Date().toISOString().split('T')[0];
-                    return(
-                        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'black' }}>
-                        <h2>Código QR para la asistencia del día {fecha}</h2>
-                        
+                    return (
+                      <div style={{ textAlign: 'center' }}>
+                        <Typography variant="h6">Código QR para la asistencia del día {fecha}</Typography>
+            
                         {idsUsuario.length > 0 ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
-                                <div>
-                                    <QRCodeCanvas 
-                                    id="qr-canvas"
-                                    value={idsUsuario[0]+"|"+fecha}
-                                    size={256}
-                                    bgColor="#ffffff"
-                                    fgColor="#000000"
-                                    level="H"
-                                    />
-                                </div>
-                                <div>
-                                    <button onClick={handleDownload} style={{backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px' }}>
-                                        Descargar QR
-                                    </button>
-                                </div>
-                            </div>
-                        
-                        ) : (
-                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                            {isLoading ? (
-                                <CircularProgress />
-                            ) : (
-                                <div>
-                                    
-                                </div>
-                            )}
-                        </div>
-                        )}
-                        
-                        {/* Botón de descarga */}
-                        
-                    </div>
-                    
-                    );
-                case 'Marcar Asistencia':
-                    return(
-                    <div style={{ display: 'flex', flexDirection:'column', justifyContent: 'center', alignItems: 'center'}}>
-                        <Card style={{ display: 'flex', flexDirection:'column', padding: '15px' ,justifyContent: 'center', alignItems: 'center'}}>
-                            <h2>Escanear Código QR</h2>
-                            {isScanning ? <div id="reader" /> : null}
-                            <Button  onClick={() => setIsScanning(!isScanning)}>
-                            {isScanning ? "Detener escaneo" : "Escanear Código QR"}
+                          <div>
+                            <QRCodeCanvas
+                              id="qr-canvas"
+                              value={idsUsuario[0] + "|" + fecha}
+                              size={256}
+                              bgColor="#ffffff"
+                              fgColor="#000000"
+                              level="H"
+                            />
+                            <Button
+                              onClick={handleDownload}
+                              variant="contained"
+                              sx={{ mt: 2 }}
+                            >
+                              Descargar QR
                             </Button>
+                          </div>
+                        ) : (
+                          <div>
+                            {isLoading ? <CircularProgress /> : null}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  case 'Marcar Asistencia':
+                    return (
+                      <div>
+                        <Card style={{ padding: '15px' }}>
+                          <Typography variant="h6">Escanear Código QR</Typography>
+                          {isScanning && <div id="reader" />}
+                          <Button onClick={() => setIsScanning(!isScanning)} variant="contained">
+                            {isScanning ? 'Detener escaneo' : 'Escanear Código QR'}
+                          </Button>
                         </Card>
-                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                            {isLoading ? (
-                                <CircularProgress />
-                            ) : (
-                                <div>
-                                    {entradaHora ? (
-                                        <Button variant="outlined" disabled fullWidth className="hora-entry">
-                                        Entrada: {formatTimestamp(entradaHora)}
-                                        </Button>
-                                    ) : showEntryButton ? (
-                                        <button onClick={() => registrarAsistenciaEntradaAuto()} >
-                                            Marcar Entrada
-                                        </button>
-                                    ) : null}
-
-                                    {salidaHora ? (
-                                        <Button variant="outlined" disabled fullWidth className="hora-exit">
-                                        Salida: {formatTimestamp(salidaHora)}
-                                        </Button>
-                                    ) : showExitButton ? (
-                                        <button onClick={() => registrarAsistenciaSalidaAuto()} >
-                                            Marcar Salida
-                                        </button>
-                                    ) : null}
-                                </div>
-                            )}
-                        </div>
-                    </div>);
-                    default:
-                return null;
-            };
+                      </div>
+                    );
+                  default:
+                    return null;
+                }
+              };
+            
+              return (
+                <div>
+                  <Button onClick={toggleVisibility} variant="contained">
+                    {isVisible ? 'Ocultar' : 'Mostrar'} Acciones
+                  </Button>
+            
+                  <div className={isVisible ? 'visible' : 'hidden'}>
+                    {realizarAcciones()}
+                  </div>
+                </div>
+              );
         };
 
         function registrarAsistenciaSalidaAuto(){

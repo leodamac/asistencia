@@ -23,7 +23,6 @@ const Login = () => {
       e.preventDefault(); 
       try {
         userCredential = await signInWithEmailAndPassword(auth, email, password);
-        console.log('Inicio de sesión exitoso:', userCredential.user);
         navigate('/user-profile');
 
       } catch (error) {

@@ -81,3 +81,11 @@
 .profile-actions button:nth-child(2):hover {
     background-color: #c82333;
 }
+
+.visible {
+    display: block;
+  }
+  
+  .hidden {
+    display: none;
+  }
