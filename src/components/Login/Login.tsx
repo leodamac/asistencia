@@ -1,4 +1,4 @@
-import { signInWithEmailAndPassword, UserCredential, onAuthStateChanged } from 'firebase/auth';
+import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { auth} from '../Firebase/Firebase';
 import { FormEvent, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +9,7 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
-    var userCredential: UserCredential;
+
 
     useEffect(() => {
       onAuthStateChanged(auth, (user) => {
@@ -22,7 +22,7 @@ const Login = () => {
     const handleLogin = async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault(); 
       try {
-        userCredential = await signInWithEmailAndPassword(auth, email, password);
+        await signInWithEmailAndPassword(auth, email, password);
         navigate('/user-profile');
 
       } catch (error) {

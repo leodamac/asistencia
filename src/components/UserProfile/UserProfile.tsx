@@ -3,7 +3,7 @@ import { db, auth } from '../Firebase/Firebase';
 import { collection, query, where, getDocs, doc, setDoc, Timestamp, getDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardContent, Typography, Button, Modal, Box, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { Card, CardContent, Typography, Button, Modal, Box, CircularProgress } from '@mui/material';
 import './UserProfile.css';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import {QRCodeCanvas} from 'qrcode.react';
@@ -49,11 +49,6 @@ const UserProfile = () => {
 
         const [isLoading, setIsLoading] = useState(false);
 
-        const [isVisible, setIsVisible] = useState(false);
-
-        const toggleVisibility = () => setIsVisible(!isVisible);
-
-
         const abrirModal = (titulo: string, mensaje: string) => {
             setModalTitle(titulo);
             setModalMessage(mensaje);
@@ -76,6 +71,7 @@ const UserProfile = () => {
         var vacacionalSeleccionado: string = "2025-1";
 
         const buscarDatoPorQR = async (qrCompleto: string, coleccion: string) => {
+            console.log(qrCompleto)
             return (await getDoc(doc(db, coleccion, qrCompleto))).data() || null;;
         };
 
@@ -243,12 +239,11 @@ const UserProfile = () => {
 
                 setOpenMessageModal(true);
 
-                registrarAsistencia(
+                registrarAsistenciaEntrada(
                     vacacionalSeleccionado,
                     qrCode,
                     lastScanned?.split("|")[0],
                     Timestamp.now(),
-                    'entrada',
                     ""
                 )
                 .then(() => {
@@ -268,6 +263,38 @@ const UserProfile = () => {
                 });
             }
         }
+
+        async function registrarAsistenciaEntrada(vacacionalId: string, voluntarioId: string, quienPermiteId: string, horaEntrada: Timestamp, observaciones: string) {
+            const fecha = new Date().toISOString().split('T')[0];
+            const asistenciaId = `${vacacionalId}-${voluntarioId}|${fecha}`;
+
+            const q =  query(collection(db, 'asistencias-voluntarios'), where('id_voluntario', '==', voluntarioId));
+            const querySnapshot = await getDocs(q);    
+
+            if (!querySnapshot.empty) {
+                querySnapshot.forEach(asistencia => {
+                    const {hora_marca_entrada } = asistencia.data();
+                    if (hora_marca_entrada) {
+                        return { success: false, message: 'La hora de entrada ya está registrada.' };
+                    }
+                });
+            }
+        
+            const docRef =  doc(collection(db,'asistencias-voluntarios'), asistenciaId);
+            const newAsistencia = {
+                vacacionalId: vacacionalId,
+                voluntarioId: voluntarioId,
+                quien_permite_id_entrada: quienPermiteId,
+                hora_real_entrada: Timestamp.now(),
+                hora_marca_entrada: horaEntrada,
+                observaciones_entrada: observaciones,
+            };
+
+            await setDoc(docRef, {
+                            ...newAsistencia
+                        }, { merge: true });
+            return { success: true, message: 'Asistencia registrada correctamente.' };
+        };
 
         useEffect(() => {
             let scanner: Html5QrcodeScanner | null = null;
@@ -306,67 +333,90 @@ const UserProfile = () => {
           };
 
         const realizarAcciones = () => {
-            const realizarAcciones = () => {
-                switch (accionUsuario) {
-                  case 'Gestionar Asistencia':
+            switch (accionUsuario) {
+                case 'Gestionar Asistencia':
                     const fecha = new Date().toISOString().split('T')[0];
-                    return (
-                      <div style={{ textAlign: 'center' }}>
-                        <Typography variant="h6">Código QR para la asistencia del día {fecha}</Typography>
-            
+                    return(
+                        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'black' }}>
+                        <h2>Código QR para la asistencia del día {fecha}</h2>
+                        
                         {idsUsuario.length > 0 ? (
-                          <div>
-                            <QRCodeCanvas
-                              id="qr-canvas"
-                              value={idsUsuario[0] + "|" + fecha}
-                              size={256}
-                              bgColor="#ffffff"
-                              fgColor="#000000"
-                              level="H"
-                            />
-                            <Button
-                              onClick={handleDownload}
-                              variant="contained"
-                              sx={{ mt: 2 }}
-                            >
-                              Descargar QR
-                            </Button>
-                          </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
+                                <div>
+                                    <QRCodeCanvas 
+                                    id="qr-canvas"
+                                    value={idsUsuario[0]+"|"+fecha}
+                                    size={256}
+                                    bgColor="#ffffff"
+                                    fgColor="#000000"
+                                    level="H"
+                                    />
+                                </div>
+                                <div>
+                                    <button onClick={handleDownload} style={{backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px' }}>
+                                        Descargar QR
+                                    </button>
+                                </div>
+                            </div>
+                        
                         ) : (
-                          <div>
-                            {isLoading ? <CircularProgress /> : null}
-                          </div>
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                            {isLoading ? (
+                                <CircularProgress />
+                            ) : (
+                                <div>
+                                    
+                                </div>
+                            )}
+                        </div>
                         )}
-                      </div>
+                        
+                        {/* Botón de descarga */}
+                        
+                    </div>
+                    
                     );
-                  case 'Marcar Asistencia':
-                    return (
-                      <div>
-                        <Card style={{ padding: '15px' }}>
-                          <Typography variant="h6">Escanear Código QR</Typography>
-                          {isScanning && <div id="reader" />}
-                          <Button onClick={() => setIsScanning(!isScanning)} variant="contained">
-                            {isScanning ? 'Detener escaneo' : 'Escanear Código QR'}
-                          </Button>
+                case 'Marcar Asistencia':
+                    return(
+                    <div style={{ display: 'flex', flexDirection:'column', justifyContent: 'center', alignItems: 'center'}}>
+                        <Card style={{ display: 'flex', flexDirection:'column', padding: '15px' ,justifyContent: 'center', alignItems: 'center'}}>
+                            <h2>Escanear Código QR</h2>
+                            {isScanning ? <div id="reader" /> : null}
+                            <Button  onClick={() => setIsScanning(!isScanning)}>
+                            {isScanning ? "Detener escaneo" : "Escanear Código QR"}
+                            </Button>
                         </Card>
-                      </div>
-                    );
-                  default:
-                    return null;
-                }
-              };
-            
-              return (
-                <div>
-                  <Button onClick={toggleVisibility} variant="contained">
-                    {isVisible ? 'Ocultar' : 'Mostrar'} Acciones
-                  </Button>
-            
-                  <div className={isVisible ? 'visible' : 'hidden'}>
-                    {realizarAcciones()}
-                  </div>
-                </div>
-              );
+                        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                            {isLoading ? (
+                                <CircularProgress />
+                            ) : (
+                                <div>
+                                    {entradaHora ? (
+                                        <Button variant="outlined" disabled fullWidth className="hora-entry">
+                                        Entrada: {formatTimestamp(entradaHora)}
+                                        </Button>
+                                    ) : showEntryButton ? (
+                                        <button onClick={() => registrarAsistenciaEntradaAuto()} >
+                                            Marcar Entrada
+                                        </button>
+                                    ) : null}
+
+                                    {salidaHora ? (
+                                        <Button variant="outlined" disabled fullWidth className="hora-exit">
+                                        Salida: {formatTimestamp(salidaHora)}
+                                        </Button>
+                                    ) : showExitButton ? (
+                                        <button onClick={() => registrarAsistenciaSalidaAuto()} >
+                                            Marcar Salida
+                                        </button>
+                                    ) : null}
+                                </div>
+                            )}
+                        </div>
+                    </div>);
+                    default:
+                return null;
+            };
         };
 
         function registrarAsistenciaSalidaAuto(){
@@ -379,11 +429,9 @@ const UserProfile = () => {
         
                 setOpenMessageModal(true);
 
-                registrarAsistencia(vacacionalSeleccionado,
+                registrarAsistenciaSalida(vacacionalSeleccionado,
                     "vol-"+persona?.qr+"-"+vacacionalSeleccionado,
-                    lastScanned?.split("|")[0],
-                    Timestamp.now(),
-                    'salida',
+                    lastScanned?.split("|")[0], Timestamp.now(),
                     "")          
                 .then(() => {
                     setIsProcessing(false);
@@ -403,53 +451,62 @@ const UserProfile = () => {
             }
         };
 
-
-        const registrarAsistencia = async (vacacionalId: string, voluntarioId: string, quienPermiteId: string, hora: Timestamp, tipo: 'entrada' | 'salida', observaciones: string) => {
+        async function registrarAsistenciaSalida(vacacionalId: string, voluntarioId: string, quienPermiteId: string, horaSalida: Timestamp, observaciones: string) {
             const fecha = new Date().toISOString().split('T')[0];
             const asistenciaId = `${vacacionalId}-${voluntarioId}|${fecha}`;
-        
-            const q = query(collection(db, 'asistencias-voluntarios'), where('id_voluntario', '==', voluntarioId));
-            const querySnapshot = await getDocs(q);
-        
+
+            const q =  query(collection(db, 'asistencias-voluntarios'), where('id_voluntario', '==', voluntarioId));
+            const querySnapshot = await getDocs(q);    
+
             if (!querySnapshot.empty) {
                 querySnapshot.forEach(asistencia => {
-                    const { hora_marca_entrada, hora_marca_salida } = asistencia.data();
-        
-                    if (tipo === 'entrada' && hora_marca_entrada) {
-                        throw new Error('La hora de entrada ya está registrada.');
+                    const {hora_marca_salida, hora_marca_entrada } = asistencia.data();
+                    if (hora_marca_salida) {
+                        return { success: false, message: 'La hora de salida ya está registrada.' };
                     }
-        
-                    if (tipo === 'salida' && !hora_marca_entrada) {
-                        throw new Error('No se puede marcar la salida si no se ha registrado la entrada.');
-                    }
-        
-                    if (tipo === 'salida' && hora_marca_salida) {
-                        throw new Error('La hora de salida ya está registrada.');
+
+                    if (horaSalida && !hora_marca_entrada) {
+                        console.log('No se puede marcar la salida si no se ha registrado la entrada.');
+                        return { success: false, message: 'No se puede marcar la salida si no se ha registrado la entrada.' };
                     }
                 });
             }
         
-            const docRef = doc(collection(db, 'asistencias-voluntarios'), asistenciaId);
-            const newAsistencia = tipo === 'entrada'
-                ? { hora_real_entrada: Timestamp.now(), hora_marca_entrada: hora, observaciones_entrada: observaciones, quien_permite_id_entrada: quienPermiteId }
-                : { hora_real_salida: Timestamp.now(), hora_marca_salida: hora, observaciones_salida: observaciones, quien_permite_id_salida: quienPermiteId };
-        
-            await setDoc(docRef, newAsistencia, { merge: true });
+            const docRef =  doc(collection(db,'asistencias-voluntarios'), asistenciaId);
+            const newAsistencia = {
+                hora_real_salida: Timestamp.now(),
+                quien_permite_id_salida: quienPermiteId,
+                hora_marca_salida: horaSalida,
+                observaciones_salida: observaciones,
+            };
+
+            await setDoc(docRef, {
+                            ...newAsistencia
+                        }, { merge: true });
             return { success: true, message: 'Asistencia registrada correctamente.' };
         };
         
         return (
         <div className="user-profile">
-                <Dialog open={openMessageModal} onClose={() => setOpenMessageModal(false)}>
-                <DialogTitle>{modalTitle}</DialogTitle>
-                <DialogContent>
+            {/* Modal de mensaje (proceso o resultado) */}
+            <Modal open={openMessageModal} onClose={() => setOpenMessageModal(false)}>
+                <Box sx={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            width: 400,
+                            bgcolor: 'black',
+                            boxShadow: 24,
+                            p: 4,
+                            borderRadius: 2,
+                        }}>
+                    <Typography variant="h6">{modalTitle}</Typography>
                     <Typography variant="body1">{modalMessage}</Typography>
                     {isProcessing && <CircularProgress />}
-                </DialogContent>
-                <DialogActions>
                     <Button onClick={() => setOpenMessageModal(false)} variant="outlined">Cerrar</Button>
-                </DialogActions>
-                </Dialog>
+                </Box>
+            </Modal>
 
         
                 <Modal
@@ -473,6 +530,8 @@ const UserProfile = () => {
                         <Typography variant="h6">{modalTitle}</Typography>
                         <Typography>{modalMessage}</Typography>
                         {realizarAcciones()}
+                        
+                        
                         <Button onClick={cerrarModal} variant="contained" sx={{ mt: 2 }}>Cerrar</Button>
                     </Box>
                 </Modal>
