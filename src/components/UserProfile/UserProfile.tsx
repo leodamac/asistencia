@@ -31,42 +31,17 @@ const UserProfile = () => {
         const [persona, setPersona] = useState<Persona | null>(null);
         const [idsUsuario, setIdsUsuario] = useState<string[]>([]);
         const navigate = useNavigate();
-        const [open, setOpen] = useState(false);
-        const [modalMessage, setModalMessage] = useState('');
-        const [modalTitle, setModalTitle] = useState('');
 
         const [accionUsuario, setAccionUsuario] = useState<string | null>(null);
         const [isScanning, setIsScanning] = useState(false);
-        const [isProcessing, setIsProcessing] = useState(false);
         const [lastScanned, setLastScanned] = useState<string | null>(null);
 
-        const [openMessageModal, setOpenMessageModal] = useState(false);
+        const [divModal, setdivModal] = useState(false);
 
         const [entradaHora, setEntradaHora] = useState<Timestamp | null>(null);
         const [salidaHora, setSalidaHora] = useState<Timestamp | null>(null);
         const [showEntryButton, setShowEntryButton] = useState(false);
         const [showExitButton, setShowExitButton] = useState(false);
-
-        const [isLoading, setIsLoading] = useState(false);
-
-        const abrirModal = (titulo: string, mensaje: string) => {
-            setModalTitle(titulo);
-            setModalMessage(mensaje);
-            setOpen(true);
-        };
-        
-        const cerrarModal = () => {
-            setOpen(false);
-            setModalTitle('');
-            setModalMessage('');
-            setAccionUsuario(null);
-            setLastScanned(null);
-            setShowEntryButton(false);
-            setShowExitButton(false);
-            setEntradaHora(null);
-            setSalidaHora(null);
-            setIsScanning(false);
-        };
 
         var vacacionalSeleccionado: string = "2025-1";
 
@@ -87,7 +62,6 @@ const UserProfile = () => {
         const handleScan = async (qrCode: string) => {
             const qrSinFecha = qrCode.split("|")[0];
             var existe = false;
-            setIsLoading(true);
             if (qrCode.startsWith("del")) {
                 const delegado = await buscarDatoPorQR(qrSinFecha, "delegados");
                 if (delegado) {
@@ -116,16 +90,10 @@ const UserProfile = () => {
                 }else{
                     setShowEntryButton(true);
                 }
+            }else{
+                alert("Codigo QR no válido");
             }
-
-            setIsLoading(false);
         };
-
-        useEffect(() => {
-            if(accionUsuario){
-                abrirModal(accionUsuario, "");
-            } 
-        }, [accionUsuario]);
 
         useEffect(() => {
             const fetchData = async () => {
@@ -232,13 +200,7 @@ const UserProfile = () => {
             if (lastScanned) {
                 const qrCode = "vol-" + persona?.qr + "-" + vacacionalSeleccionado;
                 const horaActual = new Date().toLocaleTimeString();
-        
-                setIsProcessing(true);
-                setModalTitle("Registrando Entrada");
-                setModalMessage(`Registrando entrada para ${persona?.nombre}. Hora de entrada: ${horaActual}`);
-
-                setOpenMessageModal(true);
-
+                alert(`Registrando entrada para ${persona?.nombre}. Hora de entrada: ${horaActual}`);
                 registrarAsistenciaEntrada(
                     vacacionalSeleccionado,
                     qrCode,
@@ -247,20 +209,11 @@ const UserProfile = () => {
                     ""
                 )
                 .then(() => {
-                    setIsProcessing(false);
-                    setModalTitle("Entrada Registrada");
-                    setModalMessage(`La entrada para ${persona?.nombre} ha sido registrada con éxito a las ${horaActual}.`);
+                    alert(`La entrada para ${persona?.nombre} ha sido registrada con éxito a las ${horaActual}.`);
                 })
                 .catch((error) => {
-                    setIsProcessing(false);
-                    setModalTitle("Error");
-                    setModalMessage("Hubo un error al registrar la entrada. Por favor, inténtalo nuevamente. " + error);
+                    alert("Hubo un error al registrar la entrada. Por favor, inténtalo nuevamente. " + error);
                 })
-                .finally(() => {
-                    setOpenMessageModal(false);
-                    cerrarModal();
-                    abrirModal(modalTitle, `La entrada para ${persona?.nombre} ha sido registrada con éxito a las ${horaActual}.`);
-                });
             }
         }
 
@@ -301,7 +254,7 @@ const UserProfile = () => {
         
             if (isScanning) {
               scanner = new Html5QrcodeScanner("reader", {
-                fps: 10,
+                fps: 5,
                 qrbox: 250,
               }, false);
               scanner.render(
@@ -310,8 +263,7 @@ const UserProfile = () => {
                   handleScan(decodedText);;
                 },
                 (error) => {
-                  console.error("Error al escanear", error);
-                  setLastScanned(error);}
+                  console.error("Error al escanear", error);}
               );
             }
         
@@ -336,43 +288,32 @@ const UserProfile = () => {
             switch (accionUsuario) {
                 case 'Gestionar Asistencia':
                     const fecha = new Date().toISOString().split('T')[0];
+                    const coordinador = "coo";
+                    const delegado = "del"
+
+                    const regex = new RegExp(`^(${coordinador}|${delegado})`);
+
+                    const idUsuario = idsUsuario.find(valor => regex.test(valor));
                     return(
                         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'black' }}>
                         <h2>Código QR para la asistencia del día {fecha}</h2>
-                        
-                        {idsUsuario.length > 0 ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
-                                <div>
-                                    <QRCodeCanvas 
-                                    id="qr-canvas"
-                                    value={idsUsuario[0]+"|"+fecha}
-                                    size={256}
-                                    bgColor="#ffffff"
-                                    fgColor="#000000"
-                                    level="H"
-                                    />
-                                </div>
-                                <div>
-                                    <button onClick={handleDownload} style={{backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px' }}>
-                                        Descargar QR
-                                    </button>
-                                </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
+                            <div>
+                                <QRCodeCanvas 
+                                id="qr-canvas"
+                                value={idUsuario+"|"+fecha}
+                                size={256}
+                                bgColor="#ffffff"
+                                fgColor="#000000"
+                                level="H"
+                                />
                             </div>
-                        
-                        ) : (
-                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                            {isLoading ? (
-                                <CircularProgress />
-                            ) : (
-                                <div>
-                                    
-                                </div>
-                            )}
-                        </div>
-                        )}
-                        
-                        {/* Botón de descarga */}
-                        
+                            <div>
+                                <button onClick={handleDownload} style={{backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px' }}>
+                                    Descargar QR
+                                </button>
+                            </div>
+                        </div>                        
                     </div>
                     
                     );
@@ -387,31 +328,35 @@ const UserProfile = () => {
                             </Button>
                         </Card>
                         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
-                            {isLoading ? (
-                                <CircularProgress />
-                            ) : (
-                                <div>
+                                 <div>
                                     {entradaHora ? (
                                         <Button variant="outlined" disabled fullWidth className="hora-entry">
-                                        Entrada: {formatTimestamp(entradaHora)}
+                                            Entrada Marcada: {formatTimestamp(entradaHora)}
                                         </Button>
                                     ) : showEntryButton ? (
-                                        <button onClick={() => registrarAsistenciaEntradaAuto()} >
+                                        <button onClick={() => {
+                                            registrarAsistenciaEntradaAuto();
+                                            setShowEntryButton(!showEntryButton);
+                                            setdivModal(false);}} >
                                             Marcar Entrada
                                         </button>
                                     ) : null}
 
                                     {salidaHora ? (
                                         <Button variant="outlined" disabled fullWidth className="hora-exit">
-                                        Salida: {formatTimestamp(salidaHora)}
+                                            Salida Marcada: {formatTimestamp(salidaHora)}
                                         </Button>
                                     ) : showExitButton ? (
-                                        <button onClick={() => registrarAsistenciaSalidaAuto()} >
+                                        <button onClick={() => {
+                                            registrarAsistenciaSalidaAuto();
+                                            setShowExitButton(!showExitButton);
+                                            setdivModal(false);
+                                        }} >
                                             Marcar Salida
                                         </button>
                                     ) : null}
                                 </div>
-                            )}
+
                         </div>
                     </div>);
                     default:
@@ -422,32 +367,18 @@ const UserProfile = () => {
         function registrarAsistenciaSalidaAuto(){
             if (lastScanned) {
                 const horaActual = new Date().toLocaleTimeString();
-        
-                setIsProcessing(true);
-                setModalTitle("Registrando Salida");
-                setModalMessage(`Registrando salida para ${persona?.nombre}. Hora de salida: ${horaActual}`);
-        
-                setOpenMessageModal(true);
 
+                alert(`Registrando salida para ${persona?.nombre}. Hora de salida: ${horaActual}`);
                 registrarAsistenciaSalida(vacacionalSeleccionado,
                     "vol-"+persona?.qr+"-"+vacacionalSeleccionado,
                     lastScanned?.split("|")[0], Timestamp.now(),
-                    "")          
+                    "")
                 .then(() => {
-                    setIsProcessing(false);
-                    setModalTitle("Registro Salida");
-                    setModalMessage(`La salida para ${persona?.nombre} ha sido registrada con éxito a las ${horaActual}.`);
+                    alert(`La salida para ${persona?.nombre} ha sido registrada con éxito a las ${horaActual}.`);
                 })
                 .catch((error) => {
-                    setIsProcessing(false);
-                    setModalTitle("Error");
-                    setModalMessage("Hubo un error al registrar la salida. Por favor, inténtalo nuevamente. " + error);
+                    alert("Hubo un error al registrar la salida. Por favor, inténtalo nuevamente. " + error);
                 })
-                .finally(() => {
-                    setOpenMessageModal(false);
-                    cerrarModal();
-                    abrirModal(modalTitle, `La salida para ${persona?.nombre} ha sido registrada con éxito a las ${horaActual}.`);
-                });
             }
         };
 
@@ -488,53 +419,6 @@ const UserProfile = () => {
         
         return (
         <div className="user-profile">
-            {/* Modal de mensaje (proceso o resultado) */}
-            <Modal open={openMessageModal} onClose={() => setOpenMessageModal(false)}>
-                <Box sx={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            width: 400,
-                            bgcolor: 'black',
-                            boxShadow: 24,
-                            p: 4,
-                            borderRadius: 2,
-                        }}>
-                    <Typography variant="h6">{modalTitle}</Typography>
-                    <Typography variant="body1">{modalMessage}</Typography>
-                    {isProcessing && <CircularProgress />}
-                    <Button onClick={() => setOpenMessageModal(false)} variant="outlined">Cerrar</Button>
-                </Box>
-            </Modal>
-
-        
-                <Modal
-                    open={open}
-                    onClose={cerrarModal}
-                >
-                    <Box
-                        sx={{
-                            position: 'absolute',
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            width: 400,
-                            bgcolor: 'background.paper',
-                            boxShadow: 24,
-                            p: 4,
-                            borderRadius: 2,
-                            color: 'black'
-                        }}
-                    >
-                        <Typography variant="h6">{modalTitle}</Typography>
-                        <Typography>{modalMessage}</Typography>
-                        {realizarAcciones()}
-                        
-                        
-                        <Button onClick={cerrarModal} variant="contained" sx={{ mt: 2 }}>Cerrar</Button>
-                    </Box>
-                </Modal>
             <h1>Perfil de Usuario</h1>
             {persona ? (
                 <>
@@ -556,6 +440,7 @@ const UserProfile = () => {
                                             {accion}
                                         </Typography>
                                         <Button onClick={() => {
+                                            setdivModal(true);
                                             setAccionUsuario(accion);
                                         }} variant="contained" color="primary" fullWidth>
                                             Realizar Acción
@@ -565,8 +450,30 @@ const UserProfile = () => {
                             </div>
                         ))}
                     </div>
-                    Vacacional {vacacionalSeleccionado}
-                    <div className="profile-actions">
+                    <p>Vacacional {vacacionalSeleccionado}</p>
+                    <div className={`opciones ${divModal ? 'visible' : 'hidden'}`}>
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: '50%',
+                                left: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                width: 400,
+                                bgcolor: 'background.paper',
+                                boxShadow: 24,
+                                p: 4,
+                                borderRadius: 2,
+                                color: 'black'
+                            }}
+                        >
+                            {realizarAcciones()}
+                            <Button onClick={()=>{
+                                setdivModal(false);
+                                setIsScanning(false);
+                                }} variant="contained" sx={{ mt: 2 }}>Cerrar</Button>
+                        </Box>
+                    </div>
+                    <div className={`profile-actions ${!divModal ? 'visible' : 'hidden'}`}>
                         <Button variant="outlined" color="secondary" onClick={handleLogout}>
                             Cerrar Sesión
                         </Button>
