@@ -13,9 +13,7 @@
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
-    "@mui/icons-material": "^6.4.5",
     "@mui/material": "^6.4.5",
-    "csv-parser": "^3.2.0",
     "firebase": "^11.4.0",
     "html5-qrcode": "^2.3.8",
     "papaparse": "^5.5.2",
