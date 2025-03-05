@@ -16,7 +16,6 @@ interface Delegado {
 
 const CargarDelegados = () => {
     const [delegados, setDelegados] = useState<Delegado[]>([]);
-    const [vacacionales, setVacacionales] = useState<string[]>([]);
     const [vacacionalSeleccionado, setVacacionalSeleccionado] = useState('');
     const [archivoCargado, setArchivoCargado] = useState(false);
 
@@ -28,7 +27,6 @@ const CargarDelegados = () => {
     const cargarVacacionalesDesdeFirestore = async () => {
         const vacacionalesSnapshot = await getDocs(collection(db, 'vacacionales'));
         const vacacionalesObtenidos = vacacionalesSnapshot.docs.map(doc => doc.id);
-        setVacacionales(vacacionalesObtenidos);
 
         // Seleccionar automáticamente el último vacacional como el más reciente
         if (vacacionalesObtenidos.length > 0) {
@@ -64,7 +62,7 @@ const CargarDelegados = () => {
     };
 
     const registrarDelegado = async (delegado: Delegado) => {
-        const { id_delegado, id, id_persona, id_representante, id_tipo_delegado, id_vacacional, estado, ...datosDelegado } = delegado;
+        const { id_delegado, id, id_persona, id_representante, id_tipo_delegado, id_vacacional, estado } = delegado;
 
         try {
             const docRef = doc(collection(db, 'delegados'), `${id_delegado}-${vacacionalSeleccionado}`);

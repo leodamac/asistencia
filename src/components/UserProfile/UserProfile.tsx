@@ -30,7 +30,6 @@ const UserProfile = () => {
         const [rolesUsuario, setRolesUsuario] = useState<RolUsuario[]>([]);
         const [persona, setPersona] = useState<Persona | null>(null);
         const [idsUsuario, setIdsUsuario] = useState<string[]>([]);
-        const [loading, setLoading] = useState(true);
         const navigate = useNavigate();
         const [open, setOpen] = useState(false);
         const [modalMessage, setModalMessage] = useState('');
@@ -152,7 +151,6 @@ const UserProfile = () => {
                     setRolesUsuario(queryRolesSnapshot.docs.map(doc => doc.data() as RolUsuario));
                 } else {
                     console.warn('No se encontró información de esa Persona.');
-                    setLoading(false);
                 }
             };
         
@@ -201,30 +199,9 @@ const UserProfile = () => {
             setIdsUsuario(nuevosIDs);
         };
         
-
-        const agregarID = (newId: string) => {
-            setIdsUsuario((prevItems) => [...prevItems, newId]);
-          };
-
         const handleLogout = async () => {
             await signOut(auth);
             navigate('/login');
-        };
-
-        const agregarIdsDelegadoUsuario = async (personaQr: string|undefined) =>{
-            if(personaQr){
-                const q = query(
-                    collection(db, 'delegados'), 
-                    where("__name__", ">=", "del-" + personaQr),
-                    where("__name__", "<", "del-" + personaQr + "\uf8ff")
-                );
-                const querySnapshot = await getDocs(q);
-                querySnapshot.forEach((doc) => {
-                    if(doc.id.includes(vacacionalSeleccionado)){
-                        agregarID(doc.id)
-                    }
-                });
-            }
         };
 
         const renderAcciones = () => {
@@ -279,7 +256,7 @@ const UserProfile = () => {
                 .catch((error) => {
                     setIsProcessing(false);
                     setModalTitle("Error");
-                    setModalMessage("Hubo un error al registrar la entrada. Por favor, inténtalo nuevamente.");
+                    setModalMessage("Hubo un error al registrar la entrada. Por favor, inténtalo nuevamente. " + error);
                 })
                 .finally(() => {
                     setOpenMessageModal(false); // Cierra el modal después de procesar
@@ -471,7 +448,7 @@ const UserProfile = () => {
                 .catch((error) => {
                     setIsProcessing(false);
                     setModalTitle("Error");
-                    setModalMessage("Hubo un error al registrar la salida. Por favor, inténtalo nuevamente.");
+                    setModalMessage("Hubo un error al registrar la salida. Por favor, inténtalo nuevamente. " + error);
                 })
                 .finally(() => {
                     setOpenMessageModal(false);
