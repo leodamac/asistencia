@@ -8,7 +8,8 @@ import './UserProfile.css';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import {QRCodeCanvas} from 'qrcode.react';
 import { useUltimoVacacional } from "../../context/UltimoVacacionalContext";
-
+import Input from '../Input';
+import ButtonSimple from '../Button';
 interface RolUsuario {
     correo: string;
     rol_id: number;
@@ -45,11 +46,37 @@ const UserProfile = () => {
         const [showExitButton, setShowExitButton] = useState(false);
 
         const {ultimoVacacional} = useUltimoVacacional();
-        let vacacionalSeleccionado = "";
+        const [vacacionalSeleccionado, setVacacionalSeleccionado] = useState("");
+        const [asistenciaManual, setAsistenciaManual] = useState(false);
+
+        const hoy = new Date();
+        const año = hoy.getFullYear();
+        const mes = String(hoy.getMonth() + 1).padStart(2, "0");
+        const dia = String(hoy.getDate()).padStart(2, "0");
+        const fechaActual = `${año}-${mes}-${dia}`;
+      
+        const horas = String(hoy.getHours()).padStart(2, "0");
+        const minutos = String(hoy.getMinutes()).padStart(2, "0");
+        const horaActual = `${horas}:${minutos}`;
         
+        const [fecha, setFecha] = useState(fechaActual);
+        const [hora, setHora] = useState(horaActual);
+
+        const [codigoQRManual, setCodigoQRManual] = useState("");
+        const [idAsistenciaManual, setidAsistenciaManual] = useState("");
         console.log("funcion " + ultimoVacacional);
         console.log("texto" + vacacionalSeleccionado);
 
+        const obtenerTimestamp = () => {
+            const [year, month, day] = fecha.split("-").map(Number);
+            const [hour, minute] = hora.split(":").map(Number);
+        
+            const fechaHora = new Date(year, month - 1, day, hour, minute); // Crear el objeto Date
+            const timestamp = Timestamp.fromDate(fechaHora); // Convertir a Timestamp
+        
+            console.log("Timestamp generado:", timestamp);
+            return timestamp;
+          };
         const buscarDatoPorQR = async (qrCompleto: string, coleccion: string) => {
             console.log(qrCompleto)
             return (await getDoc(doc(db, coleccion, qrCompleto))).data() || null;;
@@ -99,9 +126,12 @@ const UserProfile = () => {
                 alert("Codigo QR no válido");
             }
         };
+
         useEffect(() => {
+            console.log("No cambia");
             if(ultimoVacacional){
-                vacacionalSeleccionado = ultimoVacacional;
+                console.log("Si cambia");
+                setVacacionalSeleccionado(ultimoVacacional);
             }
         }, [ultimoVacacional]);
 
@@ -294,6 +324,29 @@ const UserProfile = () => {
             }
           };
 
+        const handleSubmitManual = async (e: React.FormEvent) => {
+            e.preventDefault();
+            const codigoVoluntario = `${codigoQRManual.split("@")[0]}-${vacacionalSeleccionado}`;
+            const voluntario = await buscarDatoPorQR(codigoVoluntario, "voluntarios");
+            if(voluntario){
+                const asistenciaId = `vol-${codigoVoluntario}|${fecha}`;
+                const asistencia = await buscarDatoPorQR(asistenciaId, "asistencias-voluntarios");
+                setidAsistenciaManual(codigoVoluntario);
+                if(asistencia){
+                    setEntradaHora(asistencia.hora_real_entrada);
+                    if(asistencia.hora_real_salida){
+                        setSalidaHora(asistencia.hora_real_salida);
+                    }else{
+                        setShowExitButton(true);
+                    }
+                }else{
+                    setShowEntryButton(true);
+                }
+            }else{
+                alert(`El usuario con correo ${codigoQRManual} no se encuentra registrado como voluntario.`)
+            }
+        };
+
         const realizarAcciones = () => {
             switch (accionUsuario) {
                 case 'Gestionar Asistencia':
@@ -306,26 +359,97 @@ const UserProfile = () => {
                     const idUsuario = idsUsuario.find(valor => regex.test(valor));
                     return(
                         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'black' }}>
-                        <h2>Código QR para la asistencia del día {fecha}</h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
-                            <div>
-                                <QRCodeCanvas 
-                                id="qr-canvas"
-                                value={idUsuario+"|"+fecha}
-                                size={256}
-                                bgColor="#ffffff"
-                                fgColor="#000000"
-                                level="H"
-                                />
+                            {asistenciaManual ? (
+                                <div>
+                                    <h2>Asistencia manual día {fecha}</h2>
+                                    <form onSubmit={handleSubmitManual}>
+                                    <Input type='text' value={codigoQRManual} onChange={setCodigoQRManual} placeholder='correo@espol.edu.ec'/>
+                                    <Input type="date" value={fecha} onChange={setFecha}/>
+                                    <Input type="time" value={hora} onChange={setHora}/>
+                                    <ButtonSimple  text="Verificar usuario" type="submit" />
+                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                                    <div>
+                                        {entradaHora ? (
+                                            <Button variant="outlined" disabled fullWidth className="hora-entry">
+                                                Entrada Marcada: {formatTimestamp(entradaHora)}
+                                            </Button>
+                                        ) : showEntryButton ? (
+                                            <button onClick={() => {
+                                                registrarAsistenciaEntrada(
+                                                    vacacionalSeleccionado,
+                                                    idAsistenciaManual,
+                                                    idUsuario?idUsuario:"",
+                                                    obtenerTimestamp(),
+                                                    "registrado manualmente")
+                                                    .then(() => {
+                                                        alert(`La entrada para ${persona?.nombre} ha sido registrada con éxito a las ${horaActual}.`);
+                                                    })
+                                                    .catch((error) => {
+                                                        alert("Hubo un error al registrar la entrada. Por favor, inténtalo nuevamente. " + error);
+                                                    });
+                                                setShowEntryButton(!showEntryButton);
+                                                setdivModal(false);
+                                                setAsistenciaManual(false);
+                                                }} >
+                                                Marcar Entrada
+                                            </button>
+                                        ) : null}
+
+                                        {salidaHora ? (
+                                            <Button variant="outlined" disabled fullWidth className="hora-exit">
+                                                Salida Marcada: {formatTimestamp(salidaHora)}
+                                            </Button>
+                                        ) : showExitButton ? (
+                                            <button onClick={() => {
+                                                registrarAsistenciaSalida(vacacionalSeleccionado,
+                                                    idAsistenciaManual,
+                                                    idUsuario?idUsuario:"",
+                                                    obtenerTimestamp(), 
+                                                    "registrado manualmente").
+                                                    then(() => {
+                                                        alert(`La salida para ${persona?.nombre} ha sido registrada con éxito a las ${horaActual}.`);
+                                                    })
+                                                    .catch((error) => {
+                                                        alert("Hubo un error al registrar la salida. Por favor, inténtalo nuevamente. " + error);
+                                                    });
+                                                setShowExitButton(!showExitButton);
+                                                setdivModal(false);
+                                                setAsistenciaManual(false);
+                                            }} >
+                                                Marcar Salida
+                                            </button>
+                                        ) : null}
+                                    </div>
                             </div>
-                            <div>
-                                <button onClick={handleDownload} style={{backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px' }}>
-                                    Descargar QR
-                                </button>
-                            </div>
-                        </div>                        
-                    </div>
-                    
+                                    </form>
+                                </div>
+                                ):(
+                                    <div>
+                                        <h2>Código QR para la asistencia del día {fecha}</h2>
+                                        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
+                                            <div>
+                                                <QRCodeCanvas 
+                                                id="qr-canvas"
+                                                value={idUsuario+"|"+fecha}
+                                                size={256}
+                                                bgColor="#ffffff"
+                                                fgColor="#000000"
+                                                level="H"
+                                                />
+                                            </div>
+                                            <div>
+                                                <button onClick={handleDownload} style={{backgroundColor: '#4CAF50', color: 'white', border: 'none', borderRadius: '5px' }}>
+                                                    Descargar QR
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                            <button  onClick={() => setAsistenciaManual(!asistenciaManual)}>
+                            {asistenciaManual ? "Escanear Código QR":"Asistencia Manual"}
+                            </button>
+                    </div>                        
                     );
                 case 'Marcar Asistencia':
                     return(
@@ -366,7 +490,6 @@ const UserProfile = () => {
                                         </button>
                                     ) : null}
                                 </div>
-
                         </div>
                     </div>);
                     default:
@@ -480,6 +603,7 @@ const UserProfile = () => {
                             <Button onClick={()=>{
                                 setdivModal(false);
                                 setIsScanning(false);
+                                setCodigoQRManual("");
                                 }} variant="contained" sx={{ mt: 2 }}>Cerrar</Button>
                         </Box>
                     </div>
