@@ -20,10 +20,12 @@ export const registrarAsistencia = async (
   const docRef = doc(db, 'asistencias-voluntarios', asistenciaId);
 
   const campoHora = tipo === 'entrada' ? 'hora_real_entrada' : 'hora_real_salida';
+  const campoHora_marca = tipo === 'entrada' ? 'hora_marca_entrada' : 'hora_marca_salida';
   const campoObservaciones = tipo === 'entrada' ? 'observaciones_entrada' : 'observaciones_salida';
 
   await setDoc(docRef, {
     [campoHora]: Timestamp.now(),
+    [campoHora_marca]: hora_marca,
     [`quien_autoriza_${tipo}`]: quienAutorizaId,
     [campoObservaciones]: observaciones,
   }, { merge: true });
