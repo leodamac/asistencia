@@ -7,6 +7,7 @@ import { Card, CardContent, Typography, Button, Box } from '@mui/material';
 import './UserProfile.css';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import {QRCodeCanvas} from 'qrcode.react';
+import { useUltimoVacacional } from "../../context/UltimoVacacionalContext";
 
 interface RolUsuario {
     correo: string;
@@ -43,7 +44,11 @@ const UserProfile = () => {
         const [showEntryButton, setShowEntryButton] = useState(false);
         const [showExitButton, setShowExitButton] = useState(false);
 
-        var vacacionalSeleccionado: string = "2025-1";
+        const {ultimoVacacional} = useUltimoVacacional();
+        let vacacionalSeleccionado = "";
+
+        console.log("funcion " + ultimoVacacional);
+        console.log("texto" + vacacionalSeleccionado);
 
         const buscarDatoPorQR = async (qrCompleto: string, coleccion: string) => {
             console.log(qrCompleto)
@@ -121,9 +126,9 @@ const UserProfile = () => {
                     console.warn('No se encontró información de esa Persona.');
                 }
             };
-        
+            vacacionalSeleccionado = ultimoVacacional?ultimoVacacional:"";
             fetchData();
-        }, []);
+        }, [ultimoVacacional]);
 
         useEffect(() => {
             if (persona && rolesUsuario.length > 0) {

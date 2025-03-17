@@ -13,6 +13,7 @@ dist-ssr
 *.local
 privado
 
+pruebas
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
