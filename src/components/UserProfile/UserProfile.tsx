@@ -46,7 +46,7 @@ const UserProfile = () => {
 
         const {ultimoVacacional} = useUltimoVacacional();
         let vacacionalSeleccionado = "";
-
+        
         console.log("funcion " + ultimoVacacional);
         console.log("texto" + vacacionalSeleccionado);
 
@@ -99,9 +99,13 @@ const UserProfile = () => {
                 alert("Codigo QR no válido");
             }
         };
+        useEffect(() => {
+            if(ultimoVacacional){
+                vacacionalSeleccionado = ultimoVacacional;
+            }
+        }, [ultimoVacacional]);
 
         useEffect(() => {
-            vacacionalSeleccionado = ultimoVacacional?ultimoVacacional:"";
             const fetchData = async () => {
                 if (!auth.currentUser) {
                     navigate('/login');
@@ -129,7 +133,7 @@ const UserProfile = () => {
             };
             
             fetchData();
-        }, [ultimoVacacional]);
+        }, [vacacionalSeleccionado]);
 
         useEffect(() => {
             if (persona && rolesUsuario.length > 0) {
