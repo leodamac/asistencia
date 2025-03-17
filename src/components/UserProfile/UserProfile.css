@@ -89,3 +89,72 @@
  .hidden {
     display: none;
   }
+
+  .dias-container {
+    max-width: 400px;
+    margin: auto;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  
+  h2 {
+    margin-bottom: 10px;
+  }
+  
+  .nuevo-dia {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+  
+  .nuevo-dia input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+  }
+  
+  .nuevo-dia button {
+    background: #4caf50;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .nuevo-dia button:hover {
+    background: #45a049;
+  }
+  
+  .lista-dias {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .lista-dias li {
+    background: white;
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .desactivar-btn {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .desactivar-btn:hover {
+    background: #c0392b;
+  }
+  

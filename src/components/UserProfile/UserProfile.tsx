@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { db, auth } from '../Firebase/Firebase';
-import { collection, query, where, getDocs, doc, setDoc, Timestamp, getDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, setDoc, Timestamp, getDoc, updateDoc, addDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, Typography, Button, Box } from '@mui/material';
@@ -64,8 +64,93 @@ const UserProfile = () => {
 
         const [codigoQRManual, setCodigoQRManual] = useState("");
         const [idAsistenciaManual, setidAsistenciaManual] = useState("");
-        console.log("funcion " + ultimoVacacional);
-        console.log("texto" + vacacionalSeleccionado);
+
+        const [dias, setDias] = useState<{ id: string; fecha: string ; activo: boolean}[]>([]);
+        const [nuevoDia, setNuevoDia] = useState("");
+        const [diasHoy, setDiasHoy] = useState<{ id: string; fecha: string; activo: boolean }[]>([]);
+
+        useEffect(() => {
+            const hoy = new Date().toLocaleDateString("es-ES", {
+                year: "numeric",
+                month: "numeric", // Quitar '2-digit' para que coincida con la BD
+                day: "numeric",
+            });
+        
+            setDiasHoy(dias.filter(dia => dia.fecha === hoy && dia.activo));
+        }, [dias]);
+      
+        useEffect(() => {
+          obtenerDiasActivos();
+        }, [vacacionalSeleccionado]);
+
+        const obtenerDiasActivos = async () => {
+            const diasRef = collection(db, "dias-asistencia");
+            const q = query(diasRef, where("vacacional", "==", vacacionalSeleccionado));
+
+            const snapshot = await getDocs(q);
+            const diasActivos = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            fecha: doc.data().fecha.toDate().toLocaleDateString(),
+            activo: doc.data().activo
+            }));
+
+            setDias(diasActivos);
+        };
+
+        const eliminarDia = async (id: string) => {
+            const diaRef = doc(db, "dias-asistencia", id);
+          
+            await deleteDoc(diaRef); // Elimina el documento
+          
+            obtenerDiasActivos(); // Refrescar la lista después de eliminar
+          };
+
+        const agregarDia = async () => {
+            if (!nuevoDia) return;
+          
+            // Extraer la fecha ingresada (YYYY-MM-DD) y dividirla
+            const [year, month, day] = nuevoDia.split("-").map(Number);
+          
+            // Crear la fecha con la hora en local (evita problemas con UTC)
+            const fechaNueva = new Date(year, month - 1, day, 12, 0, 0); // Poner la hora en el mediodía local evita cambios inesperados
+          
+            // Convertir la fecha a "DD-MM-AAAA"
+            const idFecha = `${day.toString().padStart(2, "0")}-${month.toString().padStart(2, "0")}-${year}`;
+          
+            const diasRef = collection(db, "dias-asistencia");
+            const diaDocRef = doc(diasRef, idFecha);
+          
+            // Verificar si ya existe
+            const docSnap = await getDoc(diaDocRef);
+            if (docSnap.exists()) {
+              alert("El día ya existe en la base de datos");
+              return;
+            }
+          
+            // Guardar con Timestamp sin errores de zona horaria
+            await setDoc(diaDocRef, {
+              fecha: Timestamp.fromDate(fechaNueva),
+              activo: true,
+              vacacional: vacacionalSeleccionado,
+              id_genero: persona?.qr
+            });
+          
+            setNuevoDia("");
+            obtenerDiasActivos();
+          };
+          
+
+          const alternarEstadoDia = async (id: string, estadoActual: boolean) => {
+            const diaRef = doc(db, "dias-asistencia", id);
+            console.log(id);
+            console.log(estadoActual);
+            try {
+              await updateDoc(diaRef, { activo: !estadoActual }); // Cambia el estado en Firestore
+              obtenerDiasActivos(); // Vuelve a obtener los días para actualizar la UI
+            } catch (error) {
+              console.error("Error al cambiar el estado:", error);
+            }
+          };
 
         const obtenerTimestamp = () => {
             const [year, month, day] = fecha.split("-").map(Number);
@@ -77,6 +162,7 @@ const UserProfile = () => {
             console.log("Timestamp generado:", timestamp);
             return timestamp;
           };
+
         const buscarDatoPorQR = async (qrCompleto: string, coleccion: string) => {
             console.log(qrCompleto)
             return (await getDoc(doc(db, coleccion, qrCompleto))).data() || null;;
@@ -218,6 +304,7 @@ const UserProfile = () => {
                 switch (rol.rol_id) {
                     case 0: // Admin
                         acciones.add('Gestionar Asistencia');
+                        acciones.add('Gestionar Días');
                         break;
                     case 1: // Voluntario
                         acciones.add('Marcar Asistencia');
@@ -225,6 +312,7 @@ const UserProfile = () => {
                     case 4: // Delegado
                     case 6: // Coordinador
                         acciones.add('Gestionar Asistencia');
+                        acciones.add('Gestionar Días');
                         break;
                     case 2:
                     case 3:
@@ -343,12 +431,39 @@ const UserProfile = () => {
                     setShowEntryButton(true);
                 }
             }else{
-                alert(`El usuario con correo ${codigoQRManual} no se encuentra registrado como voluntario.`)
+                setEntradaHora(null);
+                setSalidaHora(null);
+                alert(`El usuario con correo ${codigoQRManual} no se encuentra registrado como voluntario.`);
             }
         };
 
         const realizarAcciones = () => {
             switch (accionUsuario) {
+                case 'Gestionar Días':
+                    return(
+                        <div className="dias-container">
+                        <h2>Días de asistencia</h2>
+                  
+                        <div className="nuevo-dia">
+                          <input type="date" value={nuevoDia} onChange={(e) => setNuevoDia(e.target.value)} />
+                          <button onClick={agregarDia}>Agregar Día</button>
+                        </div>
+                  
+                        <ul className="lista-dias">
+                          {dias.map(({ id, fecha, activo }) => (
+                            <li key={id}>
+                              {fecha}
+                              <button className="desactivar-btn" onClick={() => alternarEstadoDia(id, activo)}>
+                                {activo?'Desactivar':'Activar'}
+                              </button>
+                              <button className="desactivar-btn" onClick={() => eliminarDia(id)}>
+                              ❌
+                            </button>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    );
                 case 'Gestionar Asistencia':
                     const fecha = new Date().toISOString().split('T')[0];
                     const coordinador = "coo";
@@ -430,7 +545,7 @@ const UserProfile = () => {
                                             <div>
                                                 <QRCodeCanvas 
                                                 id="qr-canvas"
-                                                value={idUsuario+"|"+fecha}
+                                                value={idUsuario?idUsuario:""}
                                                 size={256}
                                                 bgColor="#ffffff"
                                                 fgColor="#000000"
@@ -452,8 +567,11 @@ const UserProfile = () => {
                     </div>                        
                     );
                 case 'Marcar Asistencia':
+                    console.log(diasHoy);
+                    console.log(dias);
                     return(
                     <div style={{ display: 'flex', flexDirection:'column', justifyContent: 'center', alignItems: 'center'}}>
+                        {diasHoy.length>0 ? (<div>
                         <Card style={{ display: 'flex', flexDirection:'column', padding: '15px' ,justifyContent: 'center', alignItems: 'center'}}>
                             <h2>Escanear Código QR</h2>
                             {isScanning ? <div id="reader" /> : null}
@@ -491,6 +609,9 @@ const UserProfile = () => {
                                     ) : null}
                                 </div>
                         </div>
+                        </div>):(<div>
+                            <p>NO HAY DÍAS ACTIVOS HABLE CON ALGÚN ENCARGADO DE LA ASISTENCIA</p>
+                        </div>)}
                     </div>);
                     default:
                 return null;
