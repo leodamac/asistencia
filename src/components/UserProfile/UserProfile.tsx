@@ -101,6 +101,7 @@ const UserProfile = () => {
         };
 
         useEffect(() => {
+            vacacionalSeleccionado = ultimoVacacional?ultimoVacacional:"";
             const fetchData = async () => {
                 if (!auth.currentUser) {
                     navigate('/login');
@@ -126,7 +127,7 @@ const UserProfile = () => {
                     console.warn('No se encontró información de esa Persona.');
                 }
             };
-            vacacionalSeleccionado = ultimoVacacional?ultimoVacacional:"";
+            
             fetchData();
         }, [ultimoVacacional]);
 
@@ -455,7 +456,7 @@ const UserProfile = () => {
                             </div>
                         ))}
                     </div>
-                    <p>Vacacional {vacacionalSeleccionado}</p>
+                     {vacacionalSeleccionado && (<p>Vacacional {vacacionalSeleccionado}</p>)}
                     <div className={`opciones ${divModal ? 'visible' : 'hidden'}`}>
                         <Box
                             sx={{
