@@ -3,7 +3,7 @@ import Button from "../../components/Button";
 import { useUser } from "../../context/UserContext";
 import { useState, useEffect } from "react";
 import AttendanceForm from "../../components/AttendanceForm";
-import { auth, db } from "../../components/Firebase/Firebase";
+import { auth} from "../../components/Firebase/Firebase";
 import {Timestamp } from "firebase/firestore";
 import { fetchAssignedPeople, obtenerDiasActivos } from "../../components/FirebaseServices";
 import { useUltimoVacacional } from "../../context/UltimoVacacionalContext";
