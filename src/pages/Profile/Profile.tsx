@@ -4,7 +4,7 @@ import { useUser } from "../../context/UserContext";
 import { useState, useEffect } from "react";
 import AttendanceForm from "../../components/AttendanceForm";
 import { auth, db } from "../../components/Firebase/Firebase";
-import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
+import {Timestamp } from "firebase/firestore";
 import { fetchAssignedPeople, obtenerDiasActivos } from "../../components/FirebaseServices";
 import { useUltimoVacacional } from "../../context/UltimoVacacionalContext";
 import AttendanceList from "../../components/AttendanceList";

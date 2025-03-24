@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { db, auth } from '../Firebase/Firebase';
 import { collection, query, where, getDocs, doc, setDoc, Timestamp, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate} from 'react-router-dom';
 import { Card, CardContent, Typography, Button, Box } from '@mui/material';
 import './UserProfile.css';
 import { Html5QrcodeScanner } from 'html5-qrcode';

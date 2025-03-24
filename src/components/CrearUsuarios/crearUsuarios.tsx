@@ -67,7 +67,7 @@ const CrearUsuarios = () => {
     };
 
     const registrarUsuario = async (persona: Persona) => {
-        const { correo, qr, id } = persona;
+        const { correo, id } = persona;
         try {
             await createUserWithEmailAndPassword(auth, correo, correo);
             
