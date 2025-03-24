@@ -10,6 +10,8 @@ import { useUltimoVacacional } from "../../context/UltimoVacacionalContext";
 import AttendanceList from "../../components/AttendanceList";
 import { useAttendance } from "../../hooks/useAttendance";
 import QRCodeGenerator from "../../components/QRGenerator";
+import PopupComponent from "../../components/PopupComponent";
+import GestionarDias from "../../components/GestionarDias";
 const Profile = () => {
   interface AttendanceRecord {
     entrada?: Timestamp;
@@ -27,6 +29,7 @@ const Profile = () => {
   const { getAttendances } = useAttendance();
   const [attendances, setAttendances] = useState<AttendanceData>({});
   const [isQr, setIsQr] = useState(false);
+  const [mostrarPopup, setMostrarPopup] = useState(false);
 
   const qrData = [
     { label: "Sitio Web Asistencia (netlify)", value: "https://asistencia-vacacional.netlify.app/" },
@@ -89,8 +92,6 @@ const Profile = () => {
       {isLoading || isLoadingPeople? (
         <p>Cargando...</p>
       ) : (
-        <>
-          
           <>
               <div className="perfil-data">
                 <div className="perfil-info">
@@ -101,6 +102,17 @@ const Profile = () => {
                   <img src={persona?.url_foto} alt="imagen de perfil" className='profile-photo' />
                 </div>
               </div>
+              <>
+          <div>
+            <button onClick={() => setMostrarPopup(true)}>Gestionar Días</button>
+            {mostrarPopup && (
+              <PopupComponent onClose={() => setMostrarPopup(false)}>
+                <GestionarDias
+                  obtenerDiasActivos={obtenerDiasActivos}
+                />
+              </PopupComponent>
+            )}
+          </div>
             <>
               {isQr && <QRCodeGenerator qrData={qrData}/>}
               {diasHoy.length>0 && !isQr?<>
