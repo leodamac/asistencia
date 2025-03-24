@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Timestamp, collection, deleteDoc, doc, getDoc, setDoc, updateDoc, getDocs, query, where } from "firebase/firestore";
+import { Timestamp, collection, deleteDoc, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { db } from "./Firebase/Firebase";
 import "./GestionarDias.css";
 import { useUltimoVacacional } from "../context/UltimoVacacionalContext";
