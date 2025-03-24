@@ -16,7 +16,7 @@ const autoRoutes = Object.keys(modules).map((path) => {
 
 const manualRoutes = [
   { path: "*", element: lazy(() => import("./pages/Login/Login")) },
-  { path: "/user", element: lazy(() => import("./components/UserProfile/UserProfile")) }
+  { path: "/crear-usaurios", element: lazy(() => import("./components/CrearUsuarios/crearUsuarios")) },
 ];
 
 const routes = [...autoRoutes, ...manualRoutes];

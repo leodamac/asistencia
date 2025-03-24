@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 import LoginForm from "../../components/LoginForm/LoginForm";
 import { auth } from "../../components/Firebase/Firebase";
@@ -11,12 +11,14 @@ import '../../styles/todo.css'
 const Login: React.FC = () => {
   const [error, setError] = useState<string>("");
   const navigate = useNavigate();
+  const location = useLocation();
   const {ultimoVacacional} = useUltimoVacacional();
-
+ 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
+      var ruta = "/profile"+ location.search;
       if (user) {
-        navigate("/user");
+        navigate(ruta);
       }
     });
 
@@ -26,7 +28,7 @@ const Login: React.FC = () => {
   const handleLogin = async (email: string, password: string) => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate("/user");
+      navigate("/profile");
     } catch (error) {
       setError("Credenciales incorrectas");
     }

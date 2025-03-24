@@ -1,38 +1,77 @@
+import ResetPasswordForm from "../../components/ResetPasswordForm";
 import Button from "../../components/Button";
-import Input from "../../components/Input";
-
 import { useUser } from "../../context/UserContext";
-import { QRScanner } from '../../components/QRScanner';
-import { useState } from "react";
-//import { registrarAsistencia } from "../../components/FirebaseServices";
-//import { Timestamp } from 'firebase/firestore';
+import { useState, useEffect } from "react";
+import AttendanceForm from "../../components/AttendanceForm";
+import { auth, db } from "../../components/Firebase/Firebase";
+import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
+import { fetchAssignedPeople, obtenerDiasActivos } from "../../components/FirebaseServices";
+import { useUltimoVacacional } from "../../context/UltimoVacacionalContext";
+import AttendanceList from "../../components/AttendanceList";
+import { useAttendance } from "../../hooks/useAttendance";
 
 const Profile = () => {
-
-  const { persona, rolesUsuario, logout, isLoading } = useUser();
-  const [lastScanned, setLastScanned] = useState<string | null>(null);
-  console.log(rolesUsuario);
-  const hoy = new Date();
-  const año = hoy.getFullYear();
-  const mes = String(hoy.getMonth() + 1).padStart(2, "0");
-  const dia = String(hoy.getDate()).padStart(2, "0");
-  const fechaActual = `${año}-${mes}-${dia}`;
-
-  const horas = String(hoy.getHours()).padStart(2, "0");
-  const minutos = String(hoy.getMinutes()).padStart(2, "0");
-  const horaActual = `${horas}:${minutos}`;
+  interface AttendanceRecord {
+    entrada?: Timestamp;
+    salida?: Timestamp;
+  }
   
-  const [fecha, setFecha] = useState(fechaActual);
-  const [hora, setHora] = useState(horaActual);
+  type AttendanceData = Record<string, Record<string, AttendanceRecord>>;
+  
+  const { persona, logout, isLoading } = useUser();
+  const [assignedPeople, setAssignedPeople] = useState<{ id: string; nombre: string; apellido: string; fechaNacimiento: string }[]>([]);
+  const [isLoadingPeople, setIsLoadingPeople] = useState(true);
+  const [dias, setDias] = useState<{ id: string; fecha: string ; activo: boolean}[]>([]);
+  const {ultimoVacacional} = useUltimoVacacional();
+  const [diasHoy, setDiasHoy] = useState<{ id: string; fecha: string; activo: boolean }[]>([]);
+  const { getAttendances } = useAttendance();
+  const [attendances, setAttendances] = useState<AttendanceData>({});
 
-  const handleScan = async (qrCode: string) => {
-    setLastScanned(qrCode);
-    alert(lastScanned);
+
+  useEffect(() => {
+      const fAssignedPeople = async () => {
+        const userId = auth.currentUser?.uid;
+        if(userId){
+          const updatedPeople = await fetchAssignedPeople(userId);
+          if(updatedPeople){
+            setAssignedPeople(updatedPeople);
+          }
+        }
+      };
+    
+      fAssignedPeople();
+      setIsLoadingPeople(false);
+  }, []);
+
+  useEffect(() => {
+    const ddd = async () => {
+      if(ultimoVacacional){
+        setDias(await obtenerDiasActivos(ultimoVacacional));
+        refreshAttendances();
+      }
+    }
+    ddd();
+  }, [ultimoVacacional]);
+  
+
+  useEffect(() => {
+    const hoy = new Date().toLocaleDateString("es-ES", {
+        year: "numeric",
+        month: "numeric",
+        day: "numeric",
+    });
+    setDiasHoy(dias.filter(dia => dia.fecha === hoy && dia.activo));
+
+  }, [dias]);
+
+  const refreshAttendances = async () => {
+    const updatedAttendances = await getAttendances(); // Obtiene las asistencias actualizadas
+    setAttendances(updatedAttendances); // Actualiza el estado
   };
 
   return (
     <div className="perfil-container">
-      {isLoading ? (
+      {isLoading || isLoadingPeople? (
         <p>Cargando...</p>
       ) : (
         <>
@@ -45,10 +84,15 @@ const Profile = () => {
               <img src={persona?.url_foto} alt="imagen de perfil" className='profile-photo' />
             </div>
           </div>
-          <QRScanner onScanSuccess={ handleScan }></QRScanner>
+          {diasHoy.length>0?<>
+          <AttendanceForm onAttendanceSubmit={refreshAttendances} assignedPeople={assignedPeople.map(person => `${person.nombre} ${person.apellido}`) }/>
+          </>:<>
+            <p>NO HAY DÍAS ACTIVOS HABLE CON ALGÚN ENCARGADO DE LA ASISTENCIA</p>
+          </>}
+
+          <AttendanceList attendances={attendances}/>
+          {persona?.correo && <ResetPasswordForm email={persona.correo} />}
           <Button onClick={logout} text="Cerrar sesión"/>
-          <Input type="date" value={fecha} onChange={setFecha}/>
-          <Input type="time" value={hora} onChange={setHora}/>
         </>
       )}
     </div>

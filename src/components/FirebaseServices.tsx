@@ -1,5 +1,5 @@
 import { db } from './Firebase/Firebase';
-import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, setDoc, Timestamp, where } from 'firebase/firestore';
 
 export const buscarDatoEnColeccion = async (valorBuscado: string, coleccion: string) => {
   const docRef = doc(db, coleccion, valorBuscado);
@@ -32,3 +32,34 @@ export const registrarAsistencia = async (
 
   return { success: true, message: `Asistencia de ${tipo} registrada correctamente.` };
 };
+
+export const obtenerDiasActivos = async (vacacionalSeleccionado: string) => {
+    const diasRef = collection(db, "dias-asistencia");
+    const q = query(diasRef, where("vacacional", "==", vacacionalSeleccionado));
+
+    const snapshot = await getDocs(q);
+    const diasActivos = snapshot.docs.map((doc) => ({
+    id: doc.id,
+    fecha: doc.data().fecha.toDate().toLocaleDateString(),
+    activo: doc.data().activo
+    }));
+
+    return diasActivos;
+};
+
+export const fetchAssignedPeople = async (userId: string) => {
+    if (!userId) {
+      return;
+    }
+    try {
+      const q = query(collection(db, "people"), where("userId", "==", userId));
+      const querySnapshot = await getDocs(q);
+      const peopleList = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...(doc.data() as { nombre: string; apellido: string; fechaNacimiento: string })
+      }));
+      return peopleList;
+    } catch (error) {
+      console.error("Error fetching assigned people:", error);
+    }
+  };

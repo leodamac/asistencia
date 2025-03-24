@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { db, auth } from '../Firebase/Firebase';
 import { collection, query, where, getDocs, doc, setDoc, Timestamp, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, CardContent, Typography, Button, Box } from '@mui/material';
 import './UserProfile.css';
 import { Html5QrcodeScanner } from 'html5-qrcode';
@@ -68,11 +68,11 @@ const UserProfile = () => {
         const [dias, setDias] = useState<{ id: string; fecha: string ; activo: boolean}[]>([]);
         const [nuevoDia, setNuevoDia] = useState("");
         const [diasHoy, setDiasHoy] = useState<{ id: string; fecha: string; activo: boolean }[]>([]);
-
+        
         useEffect(() => {
             const hoy = new Date().toLocaleDateString("es-ES", {
                 year: "numeric",
-                month: "numeric", // Quitar '2-digit' para que coincida con la BD
+                month: "numeric",
                 day: "numeric",
             });
         
@@ -315,8 +315,10 @@ const UserProfile = () => {
                         acciones.add('Gestionar Días');
                         break;
                     case 2:
-                    case 3:
                         acciones.add('Nada');
+                        break;
+                    case 3: // Trabajador
+                        acciones.add('Marcar Asistencia Niños');
                         break;
                 }
             });
@@ -613,8 +615,49 @@ const UserProfile = () => {
                             <p>NO HAY DÍAS ACTIVOS HABLE CON ALGÚN ENCARGADO DE LA ASISTENCIA</p>
                         </div>)}
                     </div>);
+                    case 'Marcar Asistencia Niños':
+                        console.log(diasHoy);
+                        console.log(dias);
+                        return(
+                        <div style={{ display: 'flex', flexDirection:'column', justifyContent: 'center', alignItems: 'center'}}>
+                            {diasHoy.length>0 ? (<div>
+                            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
+                                     <div>
+                                        {entradaHora ? (
+                                            <Button variant="outlined" disabled fullWidth className="hora-entry">
+                                                Entrada Marcada: {formatTimestamp(entradaHora)}
+                                            </Button>
+                                        ) : showEntryButton ? (
+                                            <button onClick={() => {
+                                                registrarAsistenciaEntradaAuto();
+                                                setShowEntryButton(!showEntryButton);
+                                                setdivModal(false);}} >
+                                                Marcar Entrada
+                                            </button>
+                                        ) : null}
+    
+                                        {salidaHora ? (
+                                            <Button variant="outlined" disabled fullWidth className="hora-exit">
+                                                Salida Marcada: {formatTimestamp(salidaHora)}
+                                            </Button>
+                                        ) : showExitButton ? (
+                                            <button onClick={() => {
+                                                registrarAsistenciaSalidaAuto();
+                                                setShowExitButton(!showExitButton);
+                                                setdivModal(false);
+                                            }} >
+                                                Marcar Salida
+                                            </button>
+                                        ) : null}
+                                    </div>
+                            </div>
+                            </div>):(<div>
+                                <p>NO HAY DÍAS ACTIVOS HABLE CON ALGÚN ENCARGADO DE LA ASISTENCIA</p>
+                            </div>)}
+                        </div>);
                     default:
-                return null;
+                        return null;
+                
             };
         };
 

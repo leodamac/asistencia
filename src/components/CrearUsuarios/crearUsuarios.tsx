@@ -69,7 +69,7 @@ const CrearUsuarios = () => {
     const registrarUsuario = async (persona: Persona) => {
         const { correo, qr, id } = persona;
         try {
-            await createUserWithEmailAndPassword(auth, correo, qr);
+            await createUserWithEmailAndPassword(auth, correo, correo);
             
         } catch (error: any) {
             console.error('Error al registrar USUARIO:', error);
