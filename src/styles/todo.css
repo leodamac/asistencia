@@ -25,6 +25,14 @@ th, td {
   font-family: inherit;
 }
 
+.links-qr{
+  padding: 8px;
+  gap: 5px;
+  display: flex;
+  align-items: center;
+  column-gap: 25px;
+}
+
 .btn-registrar {
   padding: 8px 15px;
   background-color: #007bff;

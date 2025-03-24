@@ -9,7 +9,7 @@ import { fetchAssignedPeople, obtenerDiasActivos } from "../../components/Fireba
 import { useUltimoVacacional } from "../../context/UltimoVacacionalContext";
 import AttendanceList from "../../components/AttendanceList";
 import { useAttendance } from "../../hooks/useAttendance";
-
+import QRCodeGenerator from "../../components/QRGenerator";
 const Profile = () => {
   interface AttendanceRecord {
     entrada?: Timestamp;
@@ -26,7 +26,12 @@ const Profile = () => {
   const [diasHoy, setDiasHoy] = useState<{ id: string; fecha: string; activo: boolean }[]>([]);
   const { getAttendances } = useAttendance();
   const [attendances, setAttendances] = useState<AttendanceData>({});
+  const [isQr, setIsQr] = useState(false);
 
+  const qrData = [
+    { label: "Sitio Web Asistencia (netlify)", value: "https://asistencia-vacacional.netlify.app/" },
+    { label: "Sitio Web Asistencia (vercel)", value: "https://asistencia-vacacional.vercel.app/" },
+  ];
 
   useEffect(() => {
       const fAssignedPeople = async () => {
@@ -35,6 +40,9 @@ const Profile = () => {
           const updatedPeople = await fetchAssignedPeople(userId);
           if(updatedPeople){
             setAssignedPeople(updatedPeople);
+                      if(persona?.correo.includes("leodamac@espol.edu.ec") || persona?.correo.includes("acespino@espol.edu.ec")){
+            setIsQr(true);
+          }
           }
         }
       };
@@ -42,6 +50,13 @@ const Profile = () => {
       fAssignedPeople();
       setIsLoadingPeople(false);
   }, []);
+
+  useEffect(()=>{
+    if(persona){
+      const email = persona.correo
+      setIsQr(email.startsWith("leodamac@espol.edu.ec") || email.startsWith("acespino@espol.edu.ec"));
+    }
+  }, [persona]);
 
   useEffect(() => {
     const ddd = async () => {
@@ -75,24 +90,31 @@ const Profile = () => {
         <p>Cargando...</p>
       ) : (
         <>
-          <div className="perfil-data">
-            <div className="perfil-info">
-              <p>{persona?.nombre} {persona?.apellido}</p>
-              <p>Email: {persona?.correo}</p>
-            </div>
-            <div className="profile-photo-container">
-              <img src={persona?.url_foto} alt="imagen de perfil" className='profile-photo' />
-            </div>
-          </div>
-          {diasHoy.length>0?<>
-          <AttendanceForm onAttendanceSubmit={refreshAttendances} assignedPeople={assignedPeople.map(person => `${person.nombre} ${person.apellido}`) }/>
-          </>:<>
-            <p>NO HAY DÍAS ACTIVOS HABLE CON ALGÚN ENCARGADO DE LA ASISTENCIA</p>
-          </>}
+          
+          <>
+              <div className="perfil-data">
+                <div className="perfil-info">
+                  <p>{persona?.nombre} {persona?.apellido}</p>
+                  <p>Email: {persona?.correo}</p>
+                </div>
+                <div className="profile-photo-container">
+                  <img src={persona?.url_foto} alt="imagen de perfil" className='profile-photo' />
+                </div>
+              </div>
+            <>
+              {isQr && <QRCodeGenerator qrData={qrData}/>}
+              {diasHoy.length>0 && !isQr?<>
+                <AttendanceForm onAttendanceSubmit={refreshAttendances} assignedPeople={assignedPeople.map(person => `${person.nombre} ${person.apellido}`) }/>
+              </>:<>
+                {!isQr && <p>NO HAY DÍAS ACTIVOS HABLE CON ALGÚN ENCARGADO DE LA ASISTENCIA</p>}
+              </>}
+              {!isQr && <AttendanceList attendances={attendances}/>}
+              
+            </>
 
-          <AttendanceList attendances={attendances}/>
-          {persona?.correo && <ResetPasswordForm email={persona.correo} />}
-          <Button onClick={logout} text="Cerrar sesión"/>
+            {persona?.correo && <ResetPasswordForm email={persona.correo} />}
+            <Button onClick={logout} text="Cerrar sesión"/>
+          </>
         </>
       )}
     </div>
